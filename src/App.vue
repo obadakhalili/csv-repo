@@ -22,7 +22,9 @@ Amplify.configure(awsconfig)
         </div>
       </div>
       <Suspense>
-        <Dashboard class="p-4" />
+        <div class="p-4">
+          <Dashboard />
+        </div>
       </Suspense>
     </template>
   </Authenticator>

@@ -96,12 +96,12 @@ app.post('/csv', upload.single('csv'), (req, res) => {
     Body: encryptedFile
   }
 
-  s3.upload(params, (err, data) => {
-    if (params) {
-      return res.status().end()
+  s3.upload(params, (err) => {
+    if (err) {
+      return res.status(400).end()
     }
 
-    res.status(400).end()
+    res.end()
   })
 })
 
