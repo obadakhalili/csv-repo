@@ -18,7 +18,7 @@
       "function": {
         "csvResourceHandler": {
           "deploymentBucketName": "amplify-obadacsvrepo-staging-141255-deployment",
-          "s3Key": "amplify-builds/csvResourceHandler-6269766b376d637a4679-build.zip"
+          "s3Key": "amplify-builds/csvResourceHandler-42664a46765662764253-build.zip"
         }
       },
       "storage": {

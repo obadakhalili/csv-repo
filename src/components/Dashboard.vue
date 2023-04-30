@@ -5,7 +5,7 @@ import { useMutation, useQuery } from '@tanstack/vue-query'
 const session = await Auth.currentSession()
 const userToken = session.getIdToken().getJwtToken()
 
-const { data: files, refetch: refetchFiles } = useQuery(['get-csv'], () => {
+const { data: filesNames, refetch: refetchFiles } = useQuery(['get-csv'], () => {
   return fetch('https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv', {
     headers: {
       Authorization: `Bearer ${userToken}`
@@ -23,6 +23,22 @@ const { mutateAsync: uploadFile, isLoading: isUploading } = useMutation((formDat
   })
 })
 
+const { mutateAsync: downloadFile, isLoading: isDownloading } = useMutation(async (fileName: string) => {
+  const response = await fetch(`https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv/${fileName}`, {
+    headers: {
+      Authorization: `Bearer ${userToken}`
+    }
+  })
+  const blob = await response.blob()
+  const url = window.URL.createObjectURL(blob)
+
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  a.click()
+  a.remove()
+})
+
 async function handleFileUpload(event: Event) {
   const targetEl = event.target as HTMLInputElement
   const file = targetEl.files?.[0]!
@@ -37,23 +53,28 @@ async function handleFileUpload(event: Event) {
 </script>
 
 <template>
-  <input type="file" className="file-input file-input-sm mb-4" :onChange="handleFileUpload" />
-  <div v-if="isUploading">Uploading...</div>
-  <table v-if="files?.length" className="table w-full">
+  <input type="file" className="file-input file-input-sm mb-4" :onChange="handleFileUpload" :disabled="isUploading" />
+  <div v-if="isUploading">Uploading file...</div>
+  <div v-else-if="isDownloading">Downloading file...</div>
+  <table v-if="filesNames?.length" className="table w-full">
     <thead>
       <tr>
         <th>Name</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
-      <tr v-for="csv in files">
-        <th :key="csv">
-          {{ csv }}
+      <tr v-for="file in filesNames">
+        <th :key="file">
+          {{ file }}
         </th>
+        <td>
+          <button className="btn btn-xs btn-success" :onClick="() => downloadFile(file)" :disabled="isDownloading">Download</button>
+        </td>
       </tr>
     </tbody>
   </table>
-  <div v-else-if="files?.length === 0">
+  <div v-else-if="filesNames?.length === 0">
     No files uploaded yet.
   </div>
   <div v-else>

@@ -59,10 +59,11 @@ app.get('/csv/:fileName', function (req, res) {
       return csvtojson()
         .fromString(decryptedFile)
         .then((json) => {
-          res.send(json)
+          // res.send(json)
         })
     }
 
+    res.attachment(req.params.fileName)
     res.send(decryptedFile)
   })
 })
