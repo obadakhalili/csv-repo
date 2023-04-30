@@ -10,7 +10,7 @@ const { data: filesNames, refetch: refetchFiles } = useQuery(['get-csv'], () => 
     headers: {
       Authorization: `Bearer ${userToken}`
     }
-  }).then((res) => res.json())
+  }).then((response) => response.json())
 })
 
 const { mutateAsync: uploadFile, isLoading: isUploading } = useMutation((formData: FormData) => {
@@ -39,6 +39,15 @@ const { mutateAsync: downloadFile, isLoading: isDownloading } = useMutation(asyn
   a.remove()
 })
 
+const { mutateAsync: deleteFile, isLoading: isDeleting } = useMutation((fileName: string) => {
+  return fetch(`https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv/${fileName}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${userToken}`
+    }
+  })
+})
+
 async function handleFileUpload(event: Event) {
   const targetEl = event.target as HTMLInputElement
   const file = targetEl.files?.[0]!
@@ -50,12 +59,18 @@ async function handleFileUpload(event: Event) {
 
   targetEl.value = ''
 }
+
+async function handleDeleteFile(fileName: string) {
+  await deleteFile(fileName)
+  await refetchFiles()
+}
 </script>
 
 <template>
   <input type="file" className="file-input file-input-sm mb-4" :onChange="handleFileUpload" :disabled="isUploading" />
-  <div v-if="isUploading">Uploading file...</div>
-  <div v-else-if="isDownloading">Downloading file...</div>
+  <h1 v-if="isUploading">Uploading file...</h1>
+  <h1 v-else-if="isDownloading">Downloading file...</h1>
+  <h1 v-else-if="isDeleting">Deleting file...</h1>
   <table v-if="filesNames?.length" className="table w-full">
     <thead>
       <tr>
@@ -69,15 +84,17 @@ async function handleFileUpload(event: Event) {
           {{ file }}
         </th>
         <td>
+          <div className="btn-group">
           <button className="btn btn-xs btn-success" :onClick="() => downloadFile(file)" :disabled="isDownloading">Download</button>
-        </td>
+          <button className="btn btn-xs btn-error" :onClick="() => handleDeleteFile(file)" :disabled="isDeleting">Delete</button>
+        </div></td>
       </tr>
     </tbody>
   </table>
   <div v-else-if="filesNames?.length === 0">
     No files uploaded yet.
   </div>
-  <div v-else>
+  <h1 v-else>
     Loading...
-  </div>
+  </h1>
 </template>
