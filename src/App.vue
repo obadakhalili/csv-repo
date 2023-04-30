@@ -1,32 +1,29 @@
 <script setup lang="ts">
-import { effect } from 'vue'
+import { Amplify } from 'aws-amplify'
 import { Authenticator } from '@aws-amplify/ui-vue'
 import '@aws-amplify/ui-vue/styles.css'
 
-import { Amplify, Auth } from 'aws-amplify'
 import awsconfig from './aws-exports.js'
+import Dashboard from './components/Dashboard.vue'
 
 Amplify.configure(awsconfig)
-
-effect(async () => {
-  const session = await Auth.currentSession()
-  const token = session.getIdToken().getJwtToken()
-
-  // fetch('https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/item', {
-  //   headers: {
-  //     Authorization: token
-  //   }
-  // })
-  //   .then((res) => res.json())
-  //   .then((res) => console.log(res))
-})
 </script>
 
 <template>
+  <!-- TODO: move auth UI down -->
   <Authenticator>
-    <template v-slot="{ user, signOut }">
-      <h1>Hello {{ user.username }}!</h1>
-      <button @click="signOut">Sign Out</button>
+    <template v-slot="{ signOut, user }">
+      <div className="navbar bg-base-300">
+        <div className="flex-1">
+          <a className="btn btn-ghost normal-case text-xl">{{ user.attributes.email }}</a>
+        </div>
+        <div className="flex-none">
+          <button className="btn btn-ghost" @click="signOut">Log out</button>
+        </div>
+      </div>
+      <Suspense>
+        <Dashboard class="p-4" />
+      </Suspense>
     </template>
   </Authenticator>
 </template>

@@ -125,6 +125,7 @@ app.delete('/csv/:fileName', function (req, res) {
   })
 })
 
+// TODO: make it selective delete
 app.delete('/csv', function (req, res) {
   /**
    * 1. delete all csv files from s3.
