@@ -56,5 +56,12 @@
         }
       ]
     }
+  },
+  "storage": {
+    "s3obadacsvrepostorage": {
+      "dependsOn": [],
+      "providerPlugin": "awscloudformation",
+      "service": "S3"
+    }
   }
 }

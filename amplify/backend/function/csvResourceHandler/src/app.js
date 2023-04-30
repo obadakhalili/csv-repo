@@ -1,88 +1,164 @@
-/*
-Copyright 2017 - 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
-    http://aws.amazon.com/apache2.0/
-or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and limitations under the License.
-*/
-
+const AWS = require('aws-sdk')
 const express = require('express')
 const bodyParser = require('body-parser')
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
+const multer = require('multer')
+const Cryptr = require('cryptr')
+const csvtojson = require('csvtojson')
 
-// declare a new express app
+AWS.config.update({
+  // TODO: use env vars
+  accessKeyId: 'AKIAVPIDOE62HGCNL5N2',
+  secretAccessKey: '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'
+})
+
+const s3 = new AWS.S3()
+
 const app = express()
 app.use(bodyParser.json())
 app.use(awsServerlessExpressMiddleware.eventContext())
 
-// Enable CORS for all methods
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Headers', '*')
   next()
 })
 
-/**********************
- * Example get method *
- **********************/
-
-app.get('/item', function (req, res) {
-  // Add your code here
-  res.json({ success: 'get call succeed!', url: req.url })
+const upload = multer({
+  storage: multer.memoryStorage()
 })
 
-app.get('/item/*', function (req, res) {
-  // Add your code here
-  res.json({ success: 'get call succeed!', url: req.url })
+// TODO: use env var
+const S3_BUCKET = 'obada-csv-repo-storage141255-staging'
+
+// TODO: use env var
+const cryptr = new Cryptr('myTotallySecretKey')
+
+app.get('/csv/:fileName', function (req, res) {
+  /**
+   * 1. get csv file from s3.
+   * 2. decrypt file.
+   * 3. convert file to json if specified in req.query.format.
+   * 4. download file.
+   */
+
+  const params = {
+    Bucket: S3_BUCKET,
+    Key: req.params.fileName
+  }
+
+  s3.getObject(params, (err, data) => {
+    if (err) {
+      return res.status(400).end()
+    }
+
+    const decryptedFile = cryptr.decrypt(data.Body.toString())
+
+    if (req.query.format === 'json') {
+      // TODO: debug why this is not working
+      return csvtojson()
+        .fromString(decryptedFile)
+        .then((json) => {
+          res.send(json)
+        })
+    }
+
+    res.send(decryptedFile)
+  })
 })
 
-/****************************
- * Example post method *
- ****************************/
+app.get('/csv', function (req, res) {
+  const params = {
+    Bucket: S3_BUCKET
+  }
 
-app.post('/item', function (req, res) {
-  // Add your code here
-  res.json({ success: 'post call succeed!', url: req.url, body: req.body })
+  s3.listObjects(params, (err, data) => {
+    if (err) {
+      return res.status(400).end()
+    }
+
+    res.json(data.Contents.map((file) => file.Key))
+  })
 })
 
-app.post('/item/*', function (req, res) {
-  // Add your code here
-  res.json({ success: 'post call succeed!', url: req.url, body: req.body })
+app.post('/csv', upload.single('csv'), (req, res) => {
+  /**
+   * 1. store csv file as a table in DynamoDB.
+   * 2. encrypt file.
+   * 3. store encrypted file as s3 object.
+   */
+
+  const encryptedFile = cryptr.encrypt(req.file.buffer.toString())
+
+  const params = {
+    Bucket: S3_BUCKET,
+    Key: req.file.originalname,
+    Body: encryptedFile
+  }
+
+  s3.upload(params, (err, data) => {
+    if (params) {
+      return res.status().end()
+    }
+
+    res.status(400).end()
+  })
 })
 
-/****************************
- * Example put method *
- ****************************/
+app.delete('/csv/:fileName', function (req, res) {
+  /**
+   * 1. delete csv file from s3.
+   * 2. delete table from DynamoDB.
+   */
 
-app.put('/item', function (req, res) {
-  // Add your code here
-  res.json({ success: 'put call succeed!', url: req.url, body: req.body })
+  const params = {
+    Bucket: S3_BUCKET,
+    Key: req.params.fileName
+  }
+
+  s3.deleteObject(params, (err, data) => {
+    if (err) {
+      return res.status(400).end()
+    }
+
+    res.end()
+  })
 })
 
-app.put('/item/*', function (req, res) {
-  // Add your code here
-  res.json({ success: 'put call succeed!', url: req.url, body: req.body })
-})
+app.delete('/csv', function (req, res) {
+  /**
+   * 1. delete all csv files from s3.
+   * 2. delete all tables from DynamoDB.
+   */
 
-/****************************
- * Example delete method *
- ****************************/
+  const params = {
+    Bucket: S3_BUCKET
+  }
 
-app.delete('/item', function (req, res) {
-  // Add your code here
-  res.json({ success: 'delete call succeed!', url: req.url })
-})
+  s3.listObjects(params, (err, data) => {
+    if (err) {
+      return res.status(400).end()
+    }
 
-app.delete('/item/*', function (req, res) {
-  // Add your code here
-  res.json({ success: 'delete call succeed!', url: req.url })
+    const deleteParams = {
+      Bucket: S3_BUCKET,
+      Delete: {
+        Objects: data.Contents.map((file) => ({ Key: file.Key }))
+      }
+    }
+
+    s3.deleteObjects(deleteParams, (err) => {
+      if (err) {
+        return res.status(400).end()
+      }
+
+      res.end()
+    })
+  })
 })
 
 app.listen(3000, function () {
   console.log('App started')
 })
 
-// Export the app object. When executing the application local this does nothing. However,
-// to port it to AWS Lambda we will create a wrapper around that will load the app from
-// this file
 module.exports = app

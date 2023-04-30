@@ -1,11 +1,25 @@
 <script setup lang="ts">
-import { Authenticator } from "@aws-amplify/ui-vue";
-  import "@aws-amplify/ui-vue/styles.css";
+import { effect } from 'vue'
+import { Authenticator } from '@aws-amplify/ui-vue'
+import '@aws-amplify/ui-vue/styles.css'
 
-  import { Amplify } from 'aws-amplify';
-  import awsconfig from './aws-exports.js';
+import { Amplify, Auth } from 'aws-amplify'
+import awsconfig from './aws-exports.js'
 
-  Amplify.configure(awsconfig);
+Amplify.configure(awsconfig)
+
+effect(async () => {
+  const session = await Auth.currentSession()
+  const token = session.getIdToken().getJwtToken()
+
+  // fetch('https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/item', {
+  //   headers: {
+  //     Authorization: token
+  //   }
+  // })
+  //   .then((res) => res.json())
+  //   .then((res) => console.log(res))
+})
 </script>
 
 <template>

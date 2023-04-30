@@ -1,0 +1,12 @@
+{
+  "resourceName": "s3obadacsvrepostorage",
+  "bucketName": "obada-csv-repo-storage",
+  "policyUUID": "0fc51b20",
+  "storageAccess": "auth",
+  "guestAccess": [],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ]
+}
