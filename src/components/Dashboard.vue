@@ -23,21 +23,33 @@ const { mutateAsync: uploadFile, isLoading: isUploading } = useMutation((formDat
   })
 })
 
-const { mutateAsync: downloadFile, isLoading: isDownloading } = useMutation(async (fileName: string) => {
-  const response = await fetch(`https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv/${fileName}`, {
-    headers: {
-      Authorization: `Bearer ${userToken}`
-    }
-  })
-  const blob = await response.blob()
-  const url = window.URL.createObjectURL(blob)
+const { mutateAsync: downloadFile, isLoading: isDownloading } = useMutation(
+  async ({ fileName, asJson }: { fileName: string, asJson?: boolean }) => {
+    const api = new URL(`https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv/${fileName}`)
 
-  const a = document.createElement('a')
-  a.href = url
-  a.download = fileName
-  a.click()
-  a.remove()
-})
+    if (asJson) {
+      api.searchParams.set('format', 'json')
+    }
+
+    const response = await fetch(
+      api,
+      {
+        headers: {
+          Authorization: `Bearer ${userToken}`
+        }
+      }
+    )
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = url
+    // TODO: get file name from response headers
+    a.download = fileName
+    a.click()
+    a.remove()
+  }
+)
 
 const { mutateAsync: deleteFile, isLoading: isDeleting } = useMutation((fileName: string) => {
   return fetch(`https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv/${fileName}`, {
@@ -67,7 +79,12 @@ async function handleDeleteFile(fileName: string) {
 </script>
 
 <template>
-  <input type="file" className="file-input file-input-sm mb-4" :onChange="handleFileUpload" :disabled="isUploading" />
+  <input
+    type="file"
+    className="file-input file-input-sm mb-4"
+    :onChange="handleFileUpload"
+    :disabled="isUploading"
+  />
   <h1 v-if="isUploading">Uploading file...</h1>
   <h1 v-else-if="isDownloading">Downloading file...</h1>
   <h1 v-else-if="isDeleting">Deleting file...</h1>
@@ -85,16 +102,32 @@ async function handleDeleteFile(fileName: string) {
         </th>
         <td>
           <div className="btn-group">
-          <button className="btn btn-xs btn-success" :onClick="() => downloadFile(file)" :disabled="isDownloading">Download</button>
-          <button className="btn btn-xs btn-error" :onClick="() => handleDeleteFile(file)" :disabled="isDeleting">Delete</button>
-        </div></td>
+            <button
+              className="btn btn-xs btn-success"
+              :onClick="() => downloadFile({ fileName: file })"
+              :disabled="isDownloading"
+            >
+              Download
+            </button>
+            <button
+              className="btn btn-xs btn-warning"
+              :onClick="() => downloadFile({ fileName: file, asJson: true })"
+              :disabled="isDownloading"
+            >
+              Download as JSON
+            </button>
+            <button
+              className="btn btn-xs btn-error"
+              :onClick="() => handleDeleteFile(file)"
+              :disabled="isDeleting"
+            >
+              Delete
+            </button>
+          </div>
+        </td>
       </tr>
     </tbody>
   </table>
-  <div v-else-if="filesNames?.length === 0">
-    No files uploaded yet.
-  </div>
-  <h1 v-else>
-    Loading...
-  </h1>
+  <div v-else-if="filesNames?.length === 0">No files uploaded yet.</div>
+  <h1 v-else>Loading...</h1>
 </template>

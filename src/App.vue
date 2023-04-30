@@ -10,8 +10,8 @@ Amplify.configure(awsconfig)
 </script>
 
 <template>
-  <!-- TODO: move auth UI down -->
-  <Authenticator>
+  <!-- TODO: display app name -->
+  <Authenticator class="h-screen flex justify-center">
     <template v-slot="{ signOut, user }">
       <div className="navbar bg-base-300">
         <div className="flex-1">

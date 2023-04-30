@@ -55,11 +55,11 @@ app.get('/csv/:fileName', function (req, res) {
     const decryptedFile = cryptr.decrypt(data.Body.toString())
 
     if (req.query.format === 'json') {
-      // TODO: debug why this is not working
       return csvtojson()
         .fromString(decryptedFile)
         .then((json) => {
-          // res.send(json)
+          res.attachment(req.params.fileName + '.json')
+          res.send(json)
         })
     }
 
@@ -123,39 +123,6 @@ app.delete('/csv/:fileName', function (req, res) {
     }
 
     res.end()
-  })
-})
-
-// TODO: make it selective delete
-app.delete('/csv', function (req, res) {
-  /**
-   * 1. delete all csv files from s3.
-   * 2. delete all tables from DynamoDB.
-   */
-
-  const params = {
-    Bucket: S3_BUCKET
-  }
-
-  s3.listObjects(params, (err, data) => {
-    if (err) {
-      return res.status(400).end()
-    }
-
-    const deleteParams = {
-      Bucket: S3_BUCKET,
-      Delete: {
-        Objects: data.Contents.map((file) => ({ Key: file.Key }))
-      }
-    }
-
-    s3.deleteObjects(deleteParams, (err) => {
-      if (err) {
-        return res.status(400).end()
-      }
-
-      res.end()
-    })
   })
 })
 
