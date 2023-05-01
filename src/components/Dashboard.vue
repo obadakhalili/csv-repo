@@ -24,21 +24,20 @@ const { mutateAsync: uploadFile, isLoading: isUploading } = useMutation((formDat
 })
 
 const { mutateAsync: downloadFile, isLoading: isDownloading } = useMutation(
-  async ({ fileName, asJson }: { fileName: string, asJson?: boolean }) => {
-    const api = new URL(`https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv/${fileName}`)
+  async ({ fileName, asJson }: { fileName: string; asJson?: boolean }) => {
+    const api = new URL(
+      `https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv/${fileName}`
+    )
 
     if (asJson) {
       api.searchParams.set('format', 'json')
     }
 
-    const response = await fetch(
-      api,
-      {
-        headers: {
-          Authorization: `Bearer ${userToken}`
-        }
+    const response = await fetch(api, {
+      headers: {
+        Authorization: `Bearer ${userToken}`
       }
-    )
+    })
     const blob = await response.blob()
     const url = window.URL.createObjectURL(blob)
 

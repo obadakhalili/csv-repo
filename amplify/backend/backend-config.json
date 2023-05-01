@@ -37,6 +37,11 @@
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
+    },
+    "obadaSetUserDefaultGroup": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
     }
   },
   "parameters": {
@@ -53,6 +58,22 @@
         {
           "category": "function",
           "resourceName": "csvResourceHandler"
+        }
+      ]
+    },
+    "AMPLIFY_function_obadaSetUserDefaultGroup_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "obadaSetUserDefaultGroup"
+        }
+      ]
+    },
+    "AMPLIFY_function_obadaSetUserDefaultGroup_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "obadaSetUserDefaultGroup"
         }
       ]
     }
