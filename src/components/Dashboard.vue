@@ -102,7 +102,7 @@ async function handleDeleteFile(fileName: string) {
 <template>
   <input
     type="file"
-    className="file-input file-input-sm mb-4"
+    className="file-input file-input-sm file-input-bordered mb-4"
     :onChange="handleFileUpload"
     :disabled="isUploading"
   />

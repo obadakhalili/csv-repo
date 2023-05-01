@@ -138,7 +138,7 @@ app.post(
   }
 )
 
-app.delete('/csv/:fileName', authorize(['full-access', 'read-write-access']), (req, res) => {
+app.delete('/csv/:fileName', authorize(['full-access']), (req, res) => {
   /**
    * 1. delete csv file from s3.
    * 2. delete table from DynamoDB.
