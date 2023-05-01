@@ -13,14 +13,25 @@ const { data: filesNames, refetch: refetchFiles } = useQuery(['get-csv'], () => 
   }).then((response) => response.json())
 })
 
-const { mutateAsync: uploadFile, isLoading: isUploading } = useMutation((formData: FormData) => {
-  return fetch('https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${userToken}`
-    },
-    body: formData
-  })
+const {
+  mutateAsync: uploadFile,
+  isLoading: isUploading,
+  failureReason: uploadFilefailureReason
+} = useMutation<unknown, { message: 'Unauthorized' }, FormData>(async (formData: FormData) => {
+  const response = await fetch(
+    'https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${userToken}`
+      },
+      body: formData
+    }
+  )
+
+  if (response.status === 401) {
+    throw new Error('Unauthorized')
+  }
 })
 
 const { mutateAsync: downloadFile, isLoading: isDownloading } = useMutation(
@@ -50,13 +61,24 @@ const { mutateAsync: downloadFile, isLoading: isDownloading } = useMutation(
   }
 )
 
-const { mutateAsync: deleteFile, isLoading: isDeleting } = useMutation((fileName: string) => {
-  return fetch(`https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv/${fileName}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${userToken}`
+const {
+  mutateAsync: deleteFile,
+  isLoading: isDeleting,
+  failureReason: deleteFilefailureReason
+} = useMutation<unknown, { message: 'Unauthorized' }, string>(async (fileName: string) => {
+  const response = await fetch(
+    `https://d4yjhv4zz5.execute-api.us-east-2.amazonaws.com/default/csv/${fileName}`,
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${userToken}`
+      }
     }
-  })
+  )
+
+  if (response.status === 401) {
+    throw new Error('Unauthorized')
+  }
 })
 
 async function handleFileUpload(event: Event) {
@@ -85,8 +107,17 @@ async function handleDeleteFile(fileName: string) {
     :disabled="isUploading"
   />
   <h1 v-if="isUploading">Uploading file...</h1>
-  <h1 v-else-if="isDownloading">Downloading file...</h1>
-  <h1 v-else-if="isDeleting">Deleting file...</h1>
+  <h1 v-if="isDownloading">Downloading file...</h1>
+  <h1 v-if="isDeleting">Deleting file...</h1>
+  <h1
+    v-if="
+      uploadFilefailureReason?.message === 'Unauthorized' ||
+      deleteFilefailureReason?.message === 'Unauthorized'
+    "
+    className="text-error"
+  >
+    You are not authorized to perform this action.
+  </h1>
   <table v-if="filesNames?.length" className="table w-full">
     <thead>
       <tr>
