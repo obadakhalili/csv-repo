@@ -18,11 +18,15 @@
       "function": {
         "csvResourceHandler": {
           "deploymentBucketName": "amplify-obadacsvrepo-staging-141255-deployment",
-          "s3Key": "amplify-builds/csvResourceHandler-615a5955493356354463-build.zip"
+          "s3Key": "amplify-builds/csvResourceHandler-52465a33474b41617679-build.zip"
         },
         "obadaSetUserDefaultGroup": {
           "deploymentBucketName": "amplify-obadacsvrepo-staging-141255-deployment",
           "s3Key": "amplify-builds/obadaSetUserDefaultGroup-6531696e46444e69536d-build.zip"
+        },
+        "obadaUploadCSVFileToDB": {
+          "deploymentBucketName": "amplify-obadacsvrepo-staging-141255-deployment",
+          "s3Key": "amplify-builds/obadaUploadCSVFileToDB-49486f6b4c7534415753-build.zip"
         }
       },
       "storage": {

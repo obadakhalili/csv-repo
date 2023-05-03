@@ -4,7 +4,6 @@ const bodyParser = require('body-parser')
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 const { CognitoJwtVerifier } = require('aws-jwt-verify')
 const multer = require('multer')
-const Cryptr = require('cryptr')
 const csvtojson = require('csvtojson')
 
 AWS.config.update({
@@ -15,8 +14,12 @@ AWS.config.update({
 
 const s3 = new AWS.S3()
 
+const sns = new AWS.SNS()
+
 const app = express()
+
 app.use(bodyParser.json())
+
 app.use(awsServerlessExpressMiddleware.eventContext())
 
 app.use(function (req, res, next) {
@@ -54,9 +57,6 @@ const upload = multer({
 // TODO: use env var
 const S3_BUCKET = 'obada-csv-repo-storage141255-staging'
 
-// TODO: use env var
-const cryptr = new Cryptr('myTotallySecretKey')
-
 app.get(
   '/csv/:fileName',
   authorize(['full-access', 'read-write-access', 'read-access']),
@@ -78,11 +78,12 @@ app.get(
         return res.status(400).end()
       }
 
-      const decryptedFile = cryptr.decrypt(data.Body.toString())
+      const fileContent = data.Body.toString()
 
       if (req.query.format === 'json') {
+        // TODO: maybe get dynamodb table instead of using csvtojson?
         return csvtojson()
-          .fromString(decryptedFile)
+          .fromString(fileContent)
           .then((json) => {
             res.attachment(req.params.fileName + '.json')
             res.send(json)
@@ -90,7 +91,7 @@ app.get(
       }
 
       res.attachment(req.params.fileName)
-      res.send(decryptedFile)
+      res.send(fileContent)
     })
   }
 )
@@ -114,24 +115,32 @@ app.post(
   authorize(['full-access', 'read-write-access']),
   upload.single('csv'),
   (req, res) => {
-    /**
-     * 1. store csv file as a table in DynamoDB.
-     * 2. encrypt file.
-     * 3. store encrypted file as s3 object.
-     */
-
-    const encryptedFile = cryptr.encrypt(req.file.buffer.toString())
+    const fileContent = req.file.buffer.toString()
 
     const params = {
       Bucket: S3_BUCKET,
       Key: req.file.originalname,
-      Body: encryptedFile
+      Body: fileContent
     }
 
-    s3.upload(params, (err) => {
+    s3.upload(params, async (err) => {
       if (err) {
         return res.status(400).end()
       }
+
+      const msgParams = {
+        Message: params.Key,
+        // TODO: use env var
+        TopicArn: 'arn:aws:sns:us-east-2:376353728436:upload-csv-file-to-db'
+      }
+      // TODO: remove callback
+      sns.publish(msgParams, (err, data) => {
+        if (err) {
+          return console.log({ error: err })
+        }
+
+        console.log({ data })
+      })
 
       res.end()
     })

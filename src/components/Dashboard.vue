@@ -10,7 +10,7 @@ const { data: filesNames, refetch: refetchFiles } = useQuery(['get-csv'], () => 
     headers: {
       Authorization: `Bearer ${userToken}`
     }
-  }).then((response) => response.json())
+  }).then((response) => response.json() as Promise<string[]>)
 })
 
 const {

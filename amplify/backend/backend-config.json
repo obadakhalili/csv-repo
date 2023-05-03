@@ -42,6 +42,11 @@
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
+    },
+    "obadaUploadCSVFileToDB": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
     }
   },
   "parameters": {
@@ -74,6 +79,22 @@
         {
           "category": "function",
           "resourceName": "obadaSetUserDefaultGroup"
+        }
+      ]
+    },
+    "AMPLIFY_function_obadaUploadCSVFileToDB_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "obadaUploadCSVFileToDB"
+        }
+      ]
+    },
+    "AMPLIFY_function_obadaUploadCSVFileToDB_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "obadaUploadCSVFileToDB"
         }
       ]
     }
