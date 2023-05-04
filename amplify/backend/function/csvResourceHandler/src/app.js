@@ -148,10 +148,7 @@ app.post(
 )
 
 app.delete('/csv/:fileName', authorize(['full-access']), (req, res) => {
-  /**
-   * 1. delete csv file from s3.
-   * 2. delete table from DynamoDB.
-   */
+  // TODO: delete from dynamodb table as well
 
   const params = {
     Bucket: S3_BUCKET,
