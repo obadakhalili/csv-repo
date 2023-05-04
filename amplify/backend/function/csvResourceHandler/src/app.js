@@ -27,6 +27,7 @@ app.use(awsServerlessExpressMiddleware.eventContext())
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Headers', '*')
+  res.header('Access-Control-Expose-Headers', '*')
   next()
 })
 
@@ -80,7 +81,8 @@ app.get(
         return csvtojson()
           .fromString(fileContent)
           .then((json) => {
-            res.attachment(req.params.fileName + '.json')
+            const filename = req.params.fileName + '.json'
+            res.setHeader('filename', filename)
             res.send(json)
           })
       }
@@ -128,7 +130,7 @@ app.post(
         // TODO: use env var
         TopicArn: 'arn:aws:sns:us-east-2:376353728436:upload-csv-file-to-db'
       }
-      // TODO: remove callback
+      // NOTE: for some reason the callback is necssary for the message to be published
       sns.publish(msgParams, (err, data) => {
         if (err) {
           return console.log({ error: err })
@@ -154,7 +156,7 @@ app.delete('/csv/:fileName', authorize(['full-access']), (req, res) => {
     }
 
     const tableName = `obada_csv_repo.${params.Key.replace(/[^a-zA-Z0-9_.-]/g, '_')}`
-    // TODO: remove callback
+    // NOTE: for some reason the callback is necssary for the table to be deleted
     dynamodb.deleteTable({ TableName: tableName }, (err, data) => {
       if (err) {
         console.log({ error: err })

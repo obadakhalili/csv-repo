@@ -54,8 +54,8 @@ const { mutateAsync: downloadFile, isLoading: isDownloading } = useMutation(
 
     const a = document.createElement('a')
     a.href = url
-    // TODO: get file name from response headers
-    a.download = fileName
+    const contentDisposition = response.headers.get('content-disposition')
+    a.download = contentDisposition?.match(/filename="(.+)"/)?.[1] || `${fileName}.json`
     a.click()
     a.remove()
   }
