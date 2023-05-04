@@ -31,6 +31,9 @@
       },
       "storage": {
         "s3obadacsvrepostorage": {}
+      },
+      "hosting": {
+        "S3AndCloudFront": {}
       }
     }
   }
