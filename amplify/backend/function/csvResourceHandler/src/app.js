@@ -16,6 +16,8 @@ const s3 = new AWS.S3()
 
 const sns = new AWS.SNS()
 
+const dynamodb = new AWS.DynamoDB()
+
 const app = express()
 
 app.use(bodyParser.json())
@@ -61,13 +63,6 @@ app.get(
   '/csv/:fileName',
   authorize(['full-access', 'read-write-access', 'read-access']),
   (req, res) => {
-    /**
-     * 1. get csv file from s3.
-     * 2. decrypt file.
-     * 3. convert file to json if specified in req.query.format.
-     * 4. download file.
-     */
-
     const params = {
       Bucket: S3_BUCKET,
       Key: req.params.fileName
@@ -148,8 +143,6 @@ app.post(
 )
 
 app.delete('/csv/:fileName', authorize(['full-access']), (req, res) => {
-  // TODO: delete from dynamodb table as well
-
   const params = {
     Bucket: S3_BUCKET,
     Key: req.params.fileName
@@ -159,6 +152,16 @@ app.delete('/csv/:fileName', authorize(['full-access']), (req, res) => {
     if (err) {
       return res.status(400).end()
     }
+
+    const tableName = `obada_csv_repo.${params.Key.replace(/[^a-zA-Z0-9_.-]/g, '_')}`
+    // TODO: remove callback
+    dynamodb.deleteTable({ TableName: tableName }, (err, data) => {
+      if (err) {
+        console.log({ error: err })
+      }
+
+      console.log({ data })
+    })
 
     res.end()
   })
