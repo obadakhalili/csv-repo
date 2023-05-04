@@ -10,8 +10,10 @@ Amplify.configure(awsconfig)
 </script>
 
 <template>
-  <!-- TODO: display app name -->
   <Authenticator class="h-screen flex justify-center">
+    <template v-slot:header>
+      <h1 class="text-2xl mb-4 text-center">CSV Repo</h1>
+    </template>
     <template v-slot="{ signOut, user }">
       <div className="navbar bg-base-300">
         <div className="flex-1">
