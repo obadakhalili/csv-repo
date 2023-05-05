@@ -67,5 +67,5 @@ The CSV files’ tables uploaded by my application start with “obada_csv_repo�
 # Confessions:
 
 - The SQS queue name is incorrect, and I realized that at the end of the assignment and didn't have (بتع) enough to fix it :)
-- In my lambda functions there are many places where I should use environment variables to hide secret values but I didn't :)
+- In my lambda functions there are place(s) where I should use environment variables to hide secret values but I didn't :)
 - I have a bug where if you try to upload a file with a name that already exists will cause its DynamoDB table to be created and deleted endlessly. Not sure why, but I think it has something to do with the queue storing old files names and sending them to the lambda handler.
